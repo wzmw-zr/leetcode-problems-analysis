@@ -8,7 +8,7 @@
 
 在写字符串时采用了`sprintf`函数，**==使用`sprintf`函数向字符串中写数据时，需要注意写入数据中如果包含数字，注意数字长度，防止数字长度过长导致写入字符串超出空间，报段错误或者`heap-buffer-overflow`==。为了解决这个问题，可以将字符串空间开大，保证有足够的空间存储数字。**
 
-**代码：**
+**代码一：**
 
 ```c++
 // 计算路径数，就是计算叶子节点数量
@@ -57,6 +57,54 @@ char ** binaryTreePaths(struct TreeNode* root, int* returnSize){
     for (i = 0; i < left; i++) strcat(ret[i], left_path[i]);
     for (int j = 0; j < right; j++) strcat(ret[i + j], right_path[j]);
     *returnSize = left + right;
+    return ret;
+}
+```
+
+
+
+**代码二：**
+
+泽哥写这段代码的过程是先写接口函数内的逻辑，之后实现内部的其他功能函数。
+
+```c++
+typedef struct TreeNode TreeNode;
+
+//计算路径个数，也就是计算叶子节点个数
+int getPathCnt(TreeNode *root) {
+    if (!root) return 0;
+    if (!root->left && !root->right) return 1;
+    return getPathCnt(root->left) + getPathCnt(root->right);
+}
+
+// 获得路径实际上也是一个DFS（深度优先搜索）的过程
+// 这里还有一个C语言中的小技巧：
+// 当我们需要生成一个内容是逐步填充进去的字符串时，我们应当使用 sprintf函数及其返回值和一个len参数来不断更新下一步输入的字符串中位置。同时注意strdup这个函数的使用，会很方便
+// 在定义新的功能函数时，考虑需要那些参数时，要大致的想清楚内部的执行逻辑，之后按需确定参数
+// 比如这里使用k来表示当前生成的路径在ret中的下标，但是如果是我的话大概率会使用指针参数k
+int getResult(TreeNode *root, char **ret, char *buffer, int k, int len) {
+    if (!root) return 0;
+    len += sprintf(buffer + len, "%d", root->val);
+    buffer[len] = 0;
+    if (!root->left && !root->right) {
+        ret[k] = strdup(buffer);
+        return 1;
+    }
+    len += sprintf(buffer + len, "->");
+    int cnt = getResult(root->left, ret, buffer, k, len);
+    cnt += getResult(root->right, ret, buffer, k + cnt, len);
+    return cnt;
+}
+
+// 主要接口函数考虑处理流程逻辑
+char ** binaryTreePaths(struct TreeNode* root, int* returnSize){
+    int pathCnt = getPathCnt(root);
+    char **ret = (char **) calloc(sizeof(char *), pathCnt);
+    int max_len = 1024;
+    char *buffer = (char *) calloc(sizeof(char), max_len); 
+    // 这一步非常关键！！！先在接口函数中考虑到这一步，之后在上面实现，思考需要的参数
+    getResult(root, ret, buffer, 0, 0);
+    *returnSize = pathCnt;
     return ret;
 }
 ```

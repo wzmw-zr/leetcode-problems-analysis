@@ -6,14 +6,69 @@
 
 **分析：**
 
-使用队列对二叉树进行层次遍历即可。
+思路一：使用队列对二叉树进行层次遍历即可。(很复杂)
+
+思路二：**使用前序遍历处理与层相关的问题(统计层数，获取一层的节点个数，获取一层的节点元素等)。**在部分情况下，使用二叉树层序遍历的性质与结果的性质，==**可以在基于前序遍历过程的函数中传递层数这样的参数达到对于二叉树每一层的信息的统计和曾内数据处理的功能，可以极大地化简代码。**==
+
+**使用能够前序遍历过程，传递层数作为参数来进行层内信息统计与数据处理，达到与层序遍历处理等价的功能的原因：==前序遍历过程中，同一层的节点的处理顺序是从左往右处理的，这个顺序是和层序遍历处理的顺序是一样的==。所以在前序遍历中传入层数作为参数是可以保证同一层中节点的处理顺序是从左往右的，与层序遍历对于同一层节点的处理顺序是相同的。**
+
+
 
 **易错点与难点：**
 
 1. 函数中的参数的含义，Leetcode的一个弊端吧。参数含义在代码中解释。
 2. 在进行层序遍历时，这里要求记录每层的节点数量，所以采用了`cur_cnt`和`next_cnt`参数记录当前层的节点数和下一层的节点数，**注意在更新`cur_cnt`时，`next_cnt`要重新置为0！！！**
 
-**代码：**
+
+
+**代码一：基于前序遍历过程传递层数参数来统计层内信息与进行层内数据数据处理：**
+
+```c++
+typedef struct TreeNode TreeNode;
+
+// 获取层数
+int getDepth(TreeNode *root) {
+    if (!root) return 0;
+    int l = getDepth(root->left);
+    int r = getDepth(root->right);
+    return 1 + (l > r ? l : r);
+}
+
+// 统计每一层的节点个数，使用前序遍历，传入层数作为参数以达到对于层内信息的统计与数据处理的功能
+void getCnt(TreeNode *root, int k, int *cnt) {
+    if (!root) return ;
+    cnt[k]++;
+    getCnt(root->left, k + 1, cnt);
+    getCnt(root->right, k + 1, cnt);
+}
+
+// 获取每一层的节点数据，也是使用前序遍历，传入层数作为参数以达到对于曾内信息的统计与数据处理的功能
+void getResult(TreeNode *root, int k, int *cnt, int **ret) {
+    if (!root) return ;
+    ret[k][cnt[k]++] = root->val; 
+    getResult(root->left, k + 1, cnt, ret);
+    getResult(root->right, k + 1, cnt, ret);
+}
+
+int** levelOrder(struct TreeNode* root, int* returnSize, int** returnColumnSizes){
+    int depth = getDepth(root);
+    int **ret = (int **) calloc(sizeof(int *), depth);
+    int *cnt = (int *) calloc(sizeof(int), depth);
+    getCnt(root, 0, cnt);
+    for (int i = 0; i < depth; i++) {
+        ret[i] = (int *) calloc(sizeof(int), cnt[i]);
+        cnt[i] = 0;
+    }
+    *returnSize = depth;
+    *returnColumnSizes = cnt;
+    getResult(root, 0, cnt, ret);
+    return ret;
+}
+```
+
+
+
+**层次遍历代码：**
 
 ```c++
 typedef struct TreeNode TreeNode;

@@ -6,9 +6,57 @@
 
 **分析：**
 
-还是二叉树的层次遍历，这种情况只需要根据书高对每层获取的数据重新定位就行，大体上还是和Leetcode 102题相同。
+还是二叉树的层次遍历，这种情况只需要根据书高对每层获取的数据重新定位就行，大体上还是和Leetcode 102题相同，也是有两种解题方案。
 
-**代码：**
+
+
+**DFS传递层数参数以统计层内信息与数据处理：**
+
+```c++
+typedef struct TreeNode TreeNode;
+
+int getDepth(TreeNode *root) {
+    if (!root) return 0;
+    int l = getDepth(root->left);
+    int r = getDepth(root->right);
+    return 1 + (l > r ? l : r);
+}
+
+void getCnt(TreeNode *root, int k, int *cnt) {
+    if (!root) return ;
+    cnt[k]++;
+    getCnt(root->left, k - 1, cnt);
+    getCnt(root->right, k - 1, cnt);
+}
+// 逐层处理，而且将结果按层数倒着存储也是可以的，这里的层数正常是真实的层数，另一种就是这种倒转类型
+void getResult(TreeNode *root, int k, int *cnt, int **ret) {
+    if (!root) return ;
+    ret[k][cnt[k]++] = root->val;
+    getResult(root->left, k - 1, cnt, ret);
+    getResult(root->right, k - 1, cnt, ret);
+}
+
+int** levelOrderBottom(struct TreeNode* root, int* returnSize, int** returnColumnSizes){
+    int n = getDepth(root);
+    int **ret = (int **) calloc(sizeof(int *), n);
+    int *cnt = (int *) calloc(sizeof(int), n);
+    getCnt(root, n - 1, cnt);
+    for (int i = 0; i < n; i++) {
+        ret[i] = (int *) calloc(sizeof(int), cnt[i]);
+        cnt[i] = 0;
+    }
+    getResult(root, n - 1, cnt, ret);
+    *returnSize = n;
+    *returnColumnSizes = cnt;
+    return ret;
+}
+```
+
+
+
+
+
+**BFS代码：**
 
 ```c++
 typedef struct TreeNode TreeNode;
