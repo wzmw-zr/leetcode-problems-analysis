@@ -41,3 +41,40 @@ int kthSmallest(int** matrix, int matrixSize, int* matrixColSize, int k){
 }
 ```
 
+
+
+## 杨氏矩阵的二分答案解法
+
+考虑到杨氏矩阵的性质，每一行，每一列从左到右都是递增的，因此在查找第k小元素的时候可以使用二分答案的方法，二分的判定标准是小于等于当前数字的元素个数。
+
+同时，关于**杨氏矩阵，从左到右，每一列中小于等于某一数字的个数是递减的，画图的话就是一个递减的阶梯图。**
+
+```c++
+int check(vector<vector<int>> &matrix, int x) {
+    int n = matrix.size(), cnt = 0;
+    int j = n;
+    // 氏矩阵，从左到右，每一列中小于等于某一数字的个数是递减的，这样判定过程的时间复杂度就变成了O(n + m)，这里是O(n)
+    for (int i = 0; i < n; i++) {
+        while (j && matrix[j - 1][i] > x) --j;
+        cnt += j;
+    }
+    return cnt;
+}
+
+int kthSmallest(vector<vector<int>>& matrix, int k) {
+    int n = matrix.size();
+    int l = matrix[0][0], r = matrix[n - 1][n - 1];
+    int mid, ret;
+    while (l < r) {
+        // 二分答案，二分的对象是数字，判定标准是杨氏矩阵中小于等于当前数字的元素个数
+        mid = (l + r) >> 1;
+        ret = check(matrix, mid); 
+        if (ret < k) l = mid + 1;
+        else r = mid;
+    }
+    return l;
+}
+```
+
+
+
